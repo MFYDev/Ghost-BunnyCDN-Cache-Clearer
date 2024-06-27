@@ -1,4 +1,4 @@
-# BunnyCDN Cache Purger
+# Ghost BunnyCDN Cache Purger
 
 ## Motivation
 
