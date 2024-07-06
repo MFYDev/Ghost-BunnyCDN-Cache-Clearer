@@ -108,11 +108,13 @@ async function verifySignature(request) {
       return false;
     }
 
-    const [sigHash, timestamp] = signatureHeader.split(", ");
+    // Extract the hash and timestamp from the X-Ghost-Signature header
+    const [sigHash, timeStamp] = signatureHeader.split(", ");
     const [, hash] = sigHash.split("=");
-    const [, ts] = timestamp.split("=");
+    const [, ts] = timeStamp.split("=");
 
     const currentTime = Date.now();
+    // Check if the timestamp is within 5 minutes of the current time
     if (Math.abs(currentTime - parseInt(ts)) > 5 * 60 * 1000) {
       return false;
     }
@@ -124,6 +126,9 @@ async function verifySignature(request) {
 
     const body = await request.text();
 
+    // Create the message by concatenating the body and timestamp
+    const message = `${body}${ts}`;
+
     const key = await crypto.subtle.importKey(
       "raw",
       new TextEncoder().encode(secret),
@@ -134,7 +139,7 @@ async function verifySignature(request) {
     const signature = await crypto.subtle.sign(
       "HMAC",
       key,
-      new TextEncoder().encode(body)
+      new TextEncoder().encode(message)
     );
     const computedHash = Array.from(new Uint8Array(signature))
       .map((b) => b.toString(16).padStart(2, "0"))
